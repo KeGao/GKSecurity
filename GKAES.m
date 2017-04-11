@@ -12,7 +12,9 @@
 #import "NSData+Base64.h"
 #import "NSString+MD5.h"
 
-#define AESKEY @"0365a7515c9193cb"
+//#define AESKEY @"0365a7515c9193cb"
+
+static NSString *AESKEY = nil;
 
 @implementation GKAES
 
@@ -22,12 +24,13 @@
     dispatch_once(&onceToken, ^{
         _aes = [[self alloc] init];
     });
+    AESKEY = [mUserDefaults objectForKey:@"aesKey"];
     return _aes;
 }
 
 - (NSString *)encryptByGKAes:(NSString*)content {
     NSDate *date = [NSDate date];
-    long padding = 5000;  //有效时间 5秒
+    long padding = 50000;  //有效时间 5秒
     NSString *time = [NSString stringWithFormat:@"%ld",(long)[date timeIntervalSince1970]*1000+padding];  //当前时间戳加padding
     NSString *md5Str = [content md5String];                             //对数据进行MD5加密
     NSString *str = [NSString stringWithFormat:@"%@.%@",time,md5Str];   //拼接
@@ -41,8 +44,10 @@
     if (arr.count == 0) {
         return nil;
     }
-    NSString *random = arr.lastObject;      //截取到随机数
-    NSString *base64Token = [content substringToIndex:content.length-random.length-1];  //获取base64加密token
+    NSString *random = arr[1];          //截取到随机数
+    NSString *sign = arr.lastObject;    //截取标识
+    [mUserDefaults setObject:sign forKey:@"sign"];        //保存标识
+    NSString *base64Token = [content substringToIndex:content.length-random.length-sign.length-2];  //获取base64加密token
     NSData *aesToken = [base64Token base64_decryptToData];                              //base64解密 获取aes加密token
     NSString *md5Str = [[NSString stringWithFormat:@"%@%@",AESKEY,random] md5String];   //秘钥加获取的随机数进行MD5加密
     NSString *myAesKey = [md5Str substringWithRange:NSMakeRange(8, 16)];                //获取md5的第9到24位字符串作为解密的秘钥
@@ -52,7 +57,7 @@
 
 - (NSString *)encryptTokenByGKAes:(NSString *)content {
     NSDate *date = [NSDate date];
-    long padding = 5000;  //有效时间 5秒
+    long padding = 50000;  //有效时间 5秒
     NSString *time = [NSString stringWithFormat:@"%ld",(long)[date timeIntervalSince1970]*1000+padding];  //当前时间戳加padding
     NSString *token = [NSString stringWithFormat:@"%@.%@",content,time];                //真实token拼接时间戳
     NSString *random = [NSString stringWithFormat:@"%ld",(long)arc4random()%10000];     //生成随机数
@@ -60,7 +65,7 @@
     NSString *newAesKey = [md5Str substringWithRange:NSMakeRange(8, 16)];               //截取MD5的9到24位  作为加密的秘钥
     NSData *aesData = [token aes128_encryptToData:newAesKey];                           //通过获取的秘钥 aes加密获取加密token
     NSString *base64Str = [aesData base64_encryptToString];                             //加密token再进行base64加密
-    NSString *fullToken = [NSString stringWithFormat:@"%@.%@",base64Str,random];        //base64加密token拼接随机数得到完整token
+    NSString *fullToken = [NSString stringWithFormat:@"%@.%@.%@",base64Str,random,[mUserDefaults objectForKey:@"sign"]];        //base64加密token拼接随机数得到完整token
     return fullToken;
 }
 
