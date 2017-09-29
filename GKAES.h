@@ -10,7 +10,6 @@
 
 /**尽量不要把数据用AES加密成aesStr
    也不要对aesStr进行AES解密 **/
-
 @interface GKAES : NSObject
 
 + (id)shareInstance;
