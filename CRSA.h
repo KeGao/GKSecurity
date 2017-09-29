@@ -30,4 +30,5 @@ typedef enum {
 - (int)getBlockSizeWithRSA_PADDING_TYPE:(RSA_PADDING_TYPE)padding_type;
 - (NSString *) encryptByRsa:(NSString*)content withKeyType:(KeyType)keyType;
 - (NSString *) decryptByRsa:(NSString*)content withKeyType:(KeyType)keyType;
+
 @end
