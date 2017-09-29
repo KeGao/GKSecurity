@@ -15,7 +15,7 @@
 - (NSData *)aes128_decrypt:(NSString *)key;
 
 /**
- *  不建议使用  加密完成后的data数据转换为二进制字符串 并不是NSData转NSString
+ *  不建议使用 加密完成后的data数据转换为二进制字符串 并不是NSData转NSString
  *
  *  @param key AESKEY
  *
